@@ -7,7 +7,7 @@ import (
 )
 
 type MessagerStorage interface {
-	Receiving(message ReceivingBody) error
+	Receiving(message Message) error
 }
 
 type Server struct {
@@ -42,6 +42,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 func (s *Server) initRoutes() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/receiving", s.ReceivingMessages)
+	mux.HandleFunc("POST /vq/getstatistics", s.GetStatistics)
 
 	s.httpServer.Handler = mux
 }

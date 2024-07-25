@@ -25,7 +25,7 @@ func (s *Server) ReceivingMessages(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 
-	var rp ReceivingBody
+	var rp Message
 
 	if err := dec.Decode(&rp); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -41,4 +41,8 @@ func (s *Server) ReceivingMessages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(http.StatusText(200))
+}
+
+func (s *Server) GetStatistics(w http.ResponseWriter, r *http.Request) {
+
 }

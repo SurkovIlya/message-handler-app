@@ -9,6 +9,8 @@ import (
 
 	"github.com/SurkovIlya/message-handler-app/internal/messeger"
 	"github.com/SurkovIlya/message-handler-app/internal/server"
+	"github.com/SurkovIlya/message-handler-app/internal/sources/kafka/producer"
+	"github.com/SurkovIlya/message-handler-app/internal/sources/kafka/sub"
 	"github.com/SurkovIlya/message-handler-app/internal/storage/pg"
 	st "github.com/SurkovIlya/message-handler-app/pkg/postgres"
 )
@@ -33,7 +35,11 @@ func main() {
 
 	pgq := pg.New(db)
 
-	msgr := messeger.New(pgq)
+	kafkaProd := producer.New()
+
+	msgr := messeger.New(pgq, kafkaProd)
+
+	kafkaSub := sub.New(msgr)
 
 	srv := server.New(serverPort, msgr)
 
@@ -42,6 +48,8 @@ func main() {
 			log.Panicf("error occured while running http server: %s", err.Error())
 		}
 	}()
+
+	go kafkaSub.Start()
 
 	log.Println("app Started")
 

@@ -1,7 +1,6 @@
 package server
 
-type ReceivingBody struct {
-	From    string `json:"from"`
-	To      string `json:"to"`
-	BodyMsg string `json:"bodyMsg"`
+type Message struct {
+	ID    string `json:"id"`
+	Value string `json:"value"`
 }
