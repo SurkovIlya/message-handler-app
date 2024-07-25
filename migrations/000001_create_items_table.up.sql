@@ -1,7 +1,7 @@
-CREATE TABLE IF NOT EXISTS message (
+CREATE TABLE IF NOT EXISTS messages (
     id SERIAL PRIMARY KEY,
-    sender VARCHAR(25),
-    recipient VARCHAR(25),
-    body_message VARCHAR(255),
-    processed INT,
+    key_id VARCHAR(50),
+    body_message VARCHAR(2000),
+    processed INT DEFAULT 0,
+    is_read INT DEFAULT 0
 );
