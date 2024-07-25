@@ -1,6 +1,26 @@
 version: "3.7"
 
 services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.4
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+    networks:
+      - kafka-network
+  kafka:
+    image: confluentinc/cp-kafka:7.4.4
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+    networks:
+      - kafka-network
   database:
     image: postgres
     networks:
@@ -15,16 +35,16 @@ services:
     volumes:
       - data:/var/lib/postgresql/data
   migrate:
-      image: migrate/migrate
-      networks:
-        - new
-      volumes:
-        - ./migrations/:/migrations
-      command: ["-path", "/migrations", "-database",  "postgres://PG_USER:PG_PASS@db:5432/PG_DATABASE?sslmode=disable", "up"]
-      depends_on:
-        - database
-      links: 
-        - database
+    image: migrate/migrate
+    networks:
+      - new
+    volumes:
+      - ./migrations/:/migrations
+    command: ["-path", "/migrations", "-database",  "postgres://PG_USER:PG_PASS@db:5432/PG_DATABASE?sslmode=disable", "up"]
+    depends_on:
+      - database
+    links: 
+      - database
   server:
     build:
       context: .
@@ -32,11 +52,17 @@ services:
     env_file: .env
     depends_on:
       - migrate
+      - kafka
+    environment:
+      KAFKA_BROKER: "kafka:9092"
     networks:
       - new
+      - kafka-network
     ports:
       - "8080:8080"
 volumes:
   data:
 networks:
   new:
+  kafka-network:
+    driver: bridge
