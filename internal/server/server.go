@@ -4,10 +4,12 @@ import (
 	"context"
 	"net/http"
 	"time"
+
+	"github.com/SurkovIlya/message-handler-app/internal/model"
 )
 
 type MessagerStorage interface {
-	Receiving(message Message) error
+	Receiving(message model.Message) error
 }
 
 type Server struct {
@@ -20,8 +22,8 @@ func New(port string, msgr MessagerStorage) *Server {
 		httpServer: &http.Server{
 			Addr:           ":" + port,
 			MaxHeaderBytes: 1 << 20, // 1 MB
-			ReadTimeout:    200 * time.Millisecond,
-			WriteTimeout:   200 * time.Millisecond,
+			ReadTimeout:    1000 * time.Millisecond,
+			WriteTimeout:   1000 * time.Millisecond,
 		},
 		Messager: msgr,
 	}

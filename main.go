@@ -8,6 +8,8 @@ import (
 	"syscall"
 
 	"github.com/SurkovIlya/message-handler-app/internal/messeger"
+	"github.com/SurkovIlya/message-handler-app/internal/model"
+	"github.com/SurkovIlya/message-handler-app/internal/msgprocesser"
 	"github.com/SurkovIlya/message-handler-app/internal/server"
 	"github.com/SurkovIlya/message-handler-app/internal/sources/kafka/producer"
 	"github.com/SurkovIlya/message-handler-app/internal/sources/kafka/sub"
@@ -26,21 +28,25 @@ func main() {
 		Database: os.Getenv("POSTGRES_DB"),
 	}
 
+	kafkaParams := model.KafkaParams{
+		Host:     os.Getenv("KAFKA_HOST"),
+		Topic:    "cool-topic",
+		MaxBytes: 100,
+	}
+
 	conn, err := st.Connect(pgParams)
 	if err != nil {
 		panic(err)
 	}
 
-	db := st.New(conn)
+	storage := pg.New(st.New(conn))
 
-	pgq := pg.New(db)
+	kafkaSub := sub.New(kafkaParams)
+	msgProcesser := msgprocesser.New(storage, kafkaSub)
+	go msgProcesser.Start()
 
 	kafkaProd := producer.New()
-
-	msgr := messeger.New(pgq, kafkaProd)
-
-	kafkaSub := sub.New(msgr)
-
+	msgr := messeger.New(storage, kafkaProd)
 	srv := server.New(serverPort, msgr)
 
 	go func() {
@@ -49,8 +55,6 @@ func main() {
 		}
 	}()
 
-	go kafkaSub.Start()
-
 	log.Println("app Started")
 
 	quit := make(chan os.Signal, 1)
@@ -58,6 +62,8 @@ func main() {
 	<-quit
 
 	log.Println("app Shutting Down")
+
+	msgProcesser.Stop()
 
 	if err := srv.Shutdown(context.Background()); err != nil {
 		log.Panicf("error occured on server shutting down: %s", err.Error())
