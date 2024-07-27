@@ -3,49 +3,77 @@ package sub
 import (
 	"context"
 	"log"
-	"os"
+	"strconv"
 
+	"github.com/SurkovIlya/message-handler-app/internal/model"
 	"github.com/segmentio/kafka-go"
 )
 
-type MessagerManager interface {
-	ReadMsg(colum string, isRead bool, key string) error
-}
-
 type KafkaSub struct {
-	Reader          *kafka.Reader
-	MessagerManager MessagerManager
+	consumer *kafka.Reader
+	msgCh    chan model.Message
+	exitCh   chan struct{}
 }
 
-func New(mm MessagerManager) *KafkaSub {
+func New(params model.KafkaParams) *KafkaSub {
 	config := kafka.ReaderConfig{
-		Brokers:  []string{os.Getenv("KAFKA_HOST")},
-		Topic:    "example-topic",
-		MaxBytes: 10,
+		Brokers:  []string{params.Host},
+		Topic:    params.Topic,
+		MaxBytes: params.MaxBytes,
 	}
 
-	reader := kafka.NewReader(config)
+	consumer := kafka.NewReader(config)
 
 	return &KafkaSub{
-		Reader:          reader,
-		MessagerManager: mm,
+		consumer: consumer,
+		msgCh:    make(chan model.Message),
+		exitCh:   make(chan struct{}),
 	}
 }
 
-func (kafka *KafkaSub) Start() {
+func (kafka *KafkaSub) Stop() {
+	kafka.exitCh <- struct{}{}
+}
+
+func (kafka *KafkaSub) StartReading(ctx context.Context) {
 	for {
-		msg, err := kafka.Reader.ReadMessage(context.Background())
-		if err != nil {
-			log.Printf("error readMessage: %s", err)
+		select {
+		case _, ok := <-kafka.exitCh:
+			if ok {
+				close(kafka.msgCh)
+				close(kafka.exitCh)
 
-			continue
-		}
+				log.Println("kafka reading stopped by message from exit channel")
 
-		go func(key string) {
-			err = kafka.MessagerManager.ReadMsg("is_read", true, key)
-			if err != nil {
-				log.Printf("error ReadMsg: %s", err)
+				return
 			}
-		}(string(msg.Key))
+
+		default:
+			msg, err := kafka.consumer.ReadMessage(ctx)
+			if err != nil {
+				log.Printf("error kafka readMessage: %s", err)
+
+				continue
+			}
+
+			// err = kafka.consumer.CommitMessages(ctx, msg)
+			// if err != nil {
+			// 	log.Printf("error commit message: %s", err)
+			// }
+
+			i, err := strconv.Atoi(string(msg.Key))
+			if err != nil {
+				log.Printf("error kafka Atoi: %s", err)
+			}
+
+			kafka.msgCh <- model.Message{
+				ID:    uint32(i),
+				Value: string(msg.Value),
+			}
+		}
 	}
+}
+
+func (kafka *KafkaSub) GetMsgCh() chan model.Message {
+	return kafka.msgCh
 }

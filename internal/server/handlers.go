@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"mime"
 	"net/http"
+
+	"github.com/SurkovIlya/message-handler-app/internal/model"
 )
 
+// TODO: добавить проверку на кол-во байт
 func (s *Server) ReceivingMessages(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -25,7 +28,7 @@ func (s *Server) ReceivingMessages(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 
-	var rp Message
+	var rp model.Message
 
 	if err := dec.Decode(&rp); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -33,7 +36,7 @@ func (s *Server) ReceivingMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.Messager.Receiving(rp)
+	err = s.Messager.Receive(rp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
@@ -44,5 +47,14 @@ func (s *Server) ReceivingMessages(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) GetStatistics(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
+	stat, err := s.SC.GetStat()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
+	}
+
+	json.NewEncoder(w).Encode(stat)
 }

@@ -4,26 +4,34 @@ import (
 	"context"
 	"net/http"
 	"time"
+
+	"github.com/SurkovIlya/message-handler-app/internal/model"
 )
 
-type MessagerStorage interface {
-	Receiving(message Message) error
+type Broker interface {
+	Receive(message model.Message) error
+}
+
+type StatCollector interface {
+	GetStat() (model.Statistic, error)
 }
 
 type Server struct {
 	httpServer *http.Server
-	Messager   MessagerStorage
+	Messager   Broker
+	SC         StatCollector
 }
 
-func New(port string, msgr MessagerStorage) *Server {
+func New(port string, msgr Broker, sc StatCollector) *Server {
 	s := &Server{
 		httpServer: &http.Server{
 			Addr:           ":" + port,
 			MaxHeaderBytes: 1 << 20, // 1 MB
-			ReadTimeout:    200 * time.Millisecond,
-			WriteTimeout:   200 * time.Millisecond,
+			ReadTimeout:    5000 * time.Millisecond,
+			WriteTimeout:   5000 * time.Millisecond,
 		},
 		Messager: msgr,
+		SC:       sc,
 	}
 
 	s.initRoutes()
@@ -42,7 +50,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 func (s *Server) initRoutes() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/receiving", s.ReceivingMessages)
-	mux.HandleFunc("POST /vq/getstatistics", s.GetStatistics)
+	mux.HandleFunc("GET /v1/getstatistics", s.GetStatistics)
 
 	s.httpServer.Handler = mux
 }

@@ -1,7 +1,5 @@
 CREATE TABLE IF NOT EXISTS messages (
-    id SERIAL PRIMARY KEY,
-    key_id VARCHAR(50),
+    id BIGINT PRIMARY KEY,
     body_message VARCHAR(2000),
-    processed INT DEFAULT 0,
-    is_read INT DEFAULT 0
+    processed BOOLEAN DEFAULT false
 );

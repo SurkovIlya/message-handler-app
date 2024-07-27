@@ -2,18 +2,18 @@ package messeger
 
 import (
 	"fmt"
+	"hash/crc32"
+	"time"
 
-	"github.com/SurkovIlya/message-handler-app/internal/server"
+	"github.com/SurkovIlya/message-handler-app/internal/model"
 )
 
 type PostgresStorage interface {
-	InsertMessage(message server.Message) error
-	UpdMesageProcessed(value int, key string) error
-	UpdMesageRead(value int, key string) error
+	InsertMessage(message model.Message) error
 }
 
 type KafkaProd interface {
-	Send(message server.Message) error
+	Send(message model.Message) error
 }
 
 type MassagerManager struct {
@@ -28,7 +28,9 @@ func New(query PostgresStorage, producer KafkaProd) *MassagerManager {
 	}
 }
 
-func (mm *MassagerManager) Receiving(message server.Message) error {
+func (mm *MassagerManager) Receive(message model.Message) error {
+	message.ID = calculateCRC32(message.Value)
+
 	err := mm.QueryStorage.InsertMessage(message)
 	if err != nil {
 		return fmt.Errorf("error insert message: %s", err)
@@ -39,19 +41,10 @@ func (mm *MassagerManager) Receiving(message server.Message) error {
 		return fmt.Errorf("error kafka send: %s", err)
 	}
 
-	err = mm.QueryStorage.UpdMesageProcessed(1, message.ID)
-	if err != nil {
-		return fmt.Errorf("error upd (processed) message: %s", err)
-	}
-
 	return nil
 }
 
-func (mm *MassagerManager) ReadMsg(colum string, isRead bool, key string) error {
-	err := mm.QueryStorage.UpdMesageRead(1, key)
-	if err != nil {
-		return fmt.Errorf("error upd (is_read) message: %s", err)
-	}
-
-	return nil
+func calculateCRC32(data string) uint32 {
+	nano := fmt.Sprint(time.Now().UnixNano())
+	return crc32.ChecksumIEEE([]byte(data + nano))
 }
