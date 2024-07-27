@@ -3,7 +3,7 @@ package pg
 import (
 	"fmt"
 
-	"github.com/SurkovIlya/message-handler-app/internal/server"
+	"github.com/SurkovIlya/message-handler-app/internal/model"
 	"github.com/SurkovIlya/message-handler-app/pkg/postgres"
 )
 
@@ -17,8 +17,8 @@ func New(storage *postgres.Database) *PostgresStorage {
 	}
 }
 
-func (pgs *PostgresStorage) InsertMessage(message server.Message) error {
-	query := `INSERT INTO messages (key_id, body_message) VALUES ($1, $2)`
+func (pgs *PostgresStorage) InsertMessage(message model.Message) error {
+	query := `INSERT INTO messages (id, body_message) VALUES ($1, $2)`
 
 	_, err := pgs.storage.Conn.Exec(query, message.ID, message.Value)
 	if err != nil {
@@ -28,21 +28,10 @@ func (pgs *PostgresStorage) InsertMessage(message server.Message) error {
 	return nil
 }
 
-func (pgs *PostgresStorage) UpdMesageProcessed(value int, key string) error {
-	query := `UPDATE messages SET processed = $1 WHERE key_id = $2`
+func (pgs *PostgresStorage) UpdMesageProcessed(id uint32) error {
+	query := `UPDATE messages SET processed = $1 WHERE id = $2`
 
-	_, err := pgs.storage.Conn.Exec(query, value, key)
-	if err != nil {
-		return fmt.Errorf("error upd messages: %s", err)
-	}
-
-	return nil
-}
-
-func (pgs *PostgresStorage) UpdMesageRead(value int, key string) error {
-	query := `UPDATE messages SET is_read = $1 WHERE key_id = $2`
-
-	_, err := pgs.storage.Conn.Exec(query, value, key)
+	_, err := pgs.storage.Conn.Exec(query, true, id)
 	if err != nil {
 		return fmt.Errorf("error upd messages: %s", err)
 	}
