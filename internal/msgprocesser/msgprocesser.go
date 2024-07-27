@@ -7,6 +7,8 @@ import (
 	"github.com/SurkovIlya/message-handler-app/internal/model"
 )
 
+const maxGoroutinesCnt = 20
+
 type Storage interface {
 	UpdMesageProcessed(id uint32) error
 }
@@ -18,39 +20,49 @@ type Broker interface {
 }
 
 type MsgProcesser struct {
-	DB     Storage
-	Broker Broker
+	db      Storage
+	broker  Broker
+	limiter chan struct{}
 }
 
 func New(st Storage, br Broker) *MsgProcesser {
 	return &MsgProcesser{
-		DB:     st,
-		Broker: br,
+		db:      st,
+		broker:  br,
+		limiter: make(chan struct{}, maxGoroutinesCnt),
 	}
 }
 
 func (mp *MsgProcesser) Start() {
-	go mp.Broker.StartReading()
+	go mp.broker.StartReading()
 
-	msgCh := mp.Broker.GetMsgCh()
+	msgCh := mp.broker.GetMsgCh()
 
 	for val := range msgCh {
-		err := handleMsg(val)
-		if err != nil {
-			log.Printf("error handleMsg: %s", err)
+		mp.limiter <- struct{}{}
+		go func(v model.Message) {
+			defer func() {
+				<-mp.limiter
+			}()
 
-			continue
-		}
+			err := handleMsg(v)
+			if err != nil {
+				log.Printf("error handleMsg: %s", err)
 
-		err = mp.DB.UpdMesageProcessed(val.ID)
-		if err != nil {
-			log.Printf("error upd (processed) message: %s", err)
-		}
+				return
+			}
+
+			err = mp.db.UpdMesageProcessed(v.ID)
+			if err != nil {
+				log.Printf("error upd (processed) message: %s", err)
+			}
+		}(val)
+
 	}
 }
 
 func (mp *MsgProcesser) Stop() {
-	mp.Broker.Stop()
+	mp.broker.Stop()
 }
 
 func handleMsg(msg model.Message) error {
