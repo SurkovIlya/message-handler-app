@@ -13,6 +13,7 @@ import (
 	"github.com/SurkovIlya/message-handler-app/internal/server"
 	"github.com/SurkovIlya/message-handler-app/internal/sources/kafka/producer"
 	"github.com/SurkovIlya/message-handler-app/internal/sources/kafka/sub"
+	"github.com/SurkovIlya/message-handler-app/internal/statistics"
 	"github.com/SurkovIlya/message-handler-app/internal/storage/pg"
 	st "github.com/SurkovIlya/message-handler-app/pkg/postgres"
 )
@@ -31,7 +32,7 @@ func main() {
 	kafkaParams := model.KafkaParams{
 		Host:     os.Getenv("KAFKA_HOST"),
 		Topic:    "cool-topic",
-		MaxBytes: 100,
+		MaxBytes: 10e6,
 	}
 
 	conn, err := st.Connect(pgParams)
@@ -47,7 +48,8 @@ func main() {
 
 	kafkaProd := producer.New()
 	msgr := messeger.New(storage, kafkaProd)
-	srv := server.New(serverPort, msgr)
+	sc := statistics.New(storage)
+	srv := server.New(serverPort, msgr, sc)
 
 	go func() {
 		if err := srv.Run(); err != nil {

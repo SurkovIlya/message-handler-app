@@ -38,3 +38,20 @@ func (pgs *PostgresStorage) UpdMesageProcessed(id uint32) error {
 
 	return nil
 }
+
+func (pgs *PostgresStorage) GetStat() (model.Statistic, error) {
+	var statistic model.Statistic
+	query := `SELECT 
+		COUNT(CASE WHEN processed = TRUE THEN 1 END) AS count_processed_true,
+		COUNT(CASE WHEN processed = FALSE THEN 1 END) AS count_processed_false
+		FROM messages;`
+
+	row := pgs.storage.Conn.QueryRow(query)
+
+	err := row.Scan(&statistic.Handled, &statistic.InProcess)
+	if err != nil {
+		return statistic, fmt.Errorf("error scan: %s", err)
+	}
+
+	return statistic, nil
+}

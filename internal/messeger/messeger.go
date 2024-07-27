@@ -28,7 +28,7 @@ func New(query PostgresStorage, producer KafkaProd) *MassagerManager {
 	}
 }
 
-func (mm *MassagerManager) Receiving(message model.Message) error {
+func (mm *MassagerManager) Receive(message model.Message) error {
 	message.ID = calculateCRC32(message.Value)
 
 	err := mm.QueryStorage.InsertMessage(message)
