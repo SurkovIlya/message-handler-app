@@ -1,6 +1,6 @@
 # message-handler-app
 
-The application is running on a remote server. To access its methods, use {message-handler-app-host} = 79.174.85.168
+The application is running on a remote server. To access its methods, use {message-handler-app-host} = 79.174.85.168:8080
 
 ## A local option to launch the application and work with it:
 ### Requirements
