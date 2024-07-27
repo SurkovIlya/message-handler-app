@@ -1,6 +1,7 @@
 package msgprocesser
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -14,7 +15,7 @@ type Storage interface {
 }
 
 type Broker interface {
-	StartReading()
+	StartReading(ctx context.Context)
 	Stop()
 	GetMsgCh() chan model.Message
 }
@@ -34,7 +35,7 @@ func New(st Storage, br Broker) *MsgProcesser {
 }
 
 func (mp *MsgProcesser) Start() {
-	go mp.broker.StartReading()
+	go mp.broker.StartReading(context.Background())
 
 	msgCh := mp.broker.GetMsgCh()
 

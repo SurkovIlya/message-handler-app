@@ -35,7 +35,7 @@ func (kafka *KafkaSub) Stop() {
 	kafka.exitCh <- struct{}{}
 }
 
-func (kafka *KafkaSub) StartReading() {
+func (kafka *KafkaSub) StartReading(ctx context.Context) {
 	for {
 		select {
 		case _, ok := <-kafka.exitCh:
@@ -49,16 +49,21 @@ func (kafka *KafkaSub) StartReading() {
 			}
 
 		default:
-			msg, err := kafka.consumer.ReadMessage(context.Background())
+			msg, err := kafka.consumer.ReadMessage(ctx)
 			if err != nil {
 				log.Printf("error kafka readMessage: %s", err)
 
 				continue
 			}
 
+			// err = kafka.consumer.CommitMessages(ctx, msg)
+			// if err != nil {
+			// 	log.Printf("error commit message: %s", err)
+			// }
+
 			i, err := strconv.Atoi(string(msg.Key))
 			if err != nil {
-				log.Println("error kafka Atoi: ", err)
+				log.Printf("error kafka Atoi: %s", err)
 			}
 
 			kafka.msgCh <- model.Message{
