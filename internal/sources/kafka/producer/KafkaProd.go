@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 
-	"github.com/SurkovIlya/message-handler-app/internal/server"
+	"github.com/SurkovIlya/message-handler-app/internal/model"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -16,7 +17,7 @@ type KafkaProd struct {
 func New() *KafkaProd {
 	writer := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  []string{os.Getenv("KAFKA_HOST")},
-		Topic:    "example-topic",
+		Topic:    "cool-topic",
 		Balancer: &kafka.LeastBytes{},
 	})
 
@@ -25,17 +26,16 @@ func New() *KafkaProd {
 	}
 }
 
-func (kkprod *KafkaProd) Send(message server.Message) error {
+func (kkprod *KafkaProd) Send(message model.Message) error {
 	err := kkprod.Writer.WriteMessages(context.Background(),
 		kafka.Message{
-			Key:   []byte(message.ID),
+			Key:   []byte(strconv.FormatUint(uint64(message.ID), 10)),
 			Value: []byte(message.Value),
 		},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to write messages: %v", err)
 	}
-	// defer kkprod.Writer.Close()
 
 	return nil
 }
