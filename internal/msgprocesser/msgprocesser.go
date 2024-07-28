@@ -69,7 +69,7 @@ func (mp *MsgProcesser) Stop() {
 func handleMsg(msg model.Message) error {
 	time.Sleep(100 * time.Millisecond)
 
-	log.Printf("HANDLE: %v", msg)
+	// doing some job with message
 
 	return nil
 }

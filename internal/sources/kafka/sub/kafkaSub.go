@@ -56,11 +56,6 @@ func (kafka *KafkaSub) StartReading(ctx context.Context) {
 				continue
 			}
 
-			// err = kafka.consumer.CommitMessages(ctx, msg)
-			// if err != nil {
-			// 	log.Printf("error commit message: %s", err)
-			// }
-
 			i, err := strconv.Atoi(string(msg.Key))
 			if err != nil {
 				log.Printf("error kafka Atoi: %s", err)

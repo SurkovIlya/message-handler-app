@@ -26,7 +26,7 @@ func New(port string, msgr Broker, sc StatCollector) *Server {
 	s := &Server{
 		httpServer: &http.Server{
 			Addr:           ":" + port,
-			MaxHeaderBytes: 1 << 20, // 1 MB
+			MaxHeaderBytes: 1 << 20,
 			ReadTimeout:    5000 * time.Millisecond,
 			WriteTimeout:   5000 * time.Millisecond,
 		},
