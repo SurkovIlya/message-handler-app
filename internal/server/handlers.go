@@ -8,7 +8,8 @@ import (
 	"github.com/SurkovIlya/message-handler-app/internal/model"
 )
 
-// TODO: добавить проверку на кол-во байт
+const maxMsgSize = 10e2
+
 func (s *Server) ReceivingMessages(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -32,6 +33,12 @@ func (s *Server) ReceivingMessages(w http.ResponseWriter, r *http.Request) {
 
 	if err := dec.Decode(&rp); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+
+		return
+	}
+
+	if len(rp.Value) > maxMsgSize {
+		http.Error(w, "the maximum allowed message size has been exceeded", http.StatusBadRequest)
 
 		return
 	}

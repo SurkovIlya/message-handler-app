@@ -32,7 +32,7 @@ func main() {
 	kafkaParams := model.KafkaParams{
 		Host:     os.Getenv("KAFKA_HOST"),
 		Topic:    "cool-topic",
-		MaxBytes: 10e6,
+		MaxBytes: 10e2,
 	}
 
 	conn, err := st.Connect(pgParams)
