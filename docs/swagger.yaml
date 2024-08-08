@@ -1,0 +1,65 @@
+basePath: /
+definitions:
+  model.Message:
+    properties:
+      id:
+        type: integer
+      value:
+        type: string
+    type: object
+  model.Statistic:
+    properties:
+      handled:
+        type: integer
+      inProcess:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API server message-handler-app
+  title: message-handler-app API
+  version: "1.0"
+paths:
+  /v1/getstatistics:
+    get:
+      description: Get statistics on processed messages
+      operationId: get-statistics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Statistic'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get statistics
+  /v1/receiving:
+    post:
+      consumes:
+      - application/json
+      description: Receiving messages for further processing
+      operationId: receiving-messages
+      parameters:
+      - description: messages
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.Message'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: the maximum allowed message size has been exceeded
+          schema:
+            type: string
+      summary: Receiving messages
+swagger: "2.0"

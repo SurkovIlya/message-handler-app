@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	_ "github.com/SurkovIlya/message-handler-app/docs"
 	"github.com/SurkovIlya/message-handler-app/internal/messeger"
 	"github.com/SurkovIlya/message-handler-app/internal/model"
 	"github.com/SurkovIlya/message-handler-app/internal/msgprocesser"
@@ -20,6 +21,11 @@ import (
 
 const serverPort = "8080"
 
+// @title message-handler-app API
+// @version 1.0
+// @description API server message-handler-app
+// @host localhost:8080
+// @BasePath /
 func main() {
 	pgParams := st.DBParams{
 		Host:     os.Getenv("POSTGRES_HOST"),

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/SurkovIlya/message-handler-app/internal/model"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type Broker interface {
@@ -51,6 +52,7 @@ func (s *Server) initRoutes() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/receiving", s.ReceivingMessages)
 	mux.HandleFunc("GET /v1/getstatistics", s.GetStatistics)
+	mux.HandleFunc("/swagger/*", httpSwagger.WrapHandler)
 
 	s.httpServer.Handler = mux
 }

@@ -1,0 +1,99 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API server message-handler-app",
+        "title": "message-handler-app API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/v1/getstatistics": {
+            "get": {
+                "description": "Get statistics on processed messages",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get statistics",
+                "operationId": "get-statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Statistic"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/receiving": {
+            "post": {
+                "description": "Receiving messages for further processing",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Receiving messages",
+                "operationId": "receiving-messages",
+                "parameters": [
+                    {
+                        "description": "messages",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.Message"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "the maximum allowed message size has been exceeded",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.Message": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Statistic": {
+            "type": "object",
+            "properties": {
+                "handled": {
+                    "type": "integer"
+                },
+                "inProcess": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

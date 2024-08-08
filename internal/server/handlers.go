@@ -10,6 +10,15 @@ import (
 
 const maxMsgSize = 10e2
 
+// @Summary Receiving messages
+// @Description Receiving messages for further processing
+// @ID receiving-messages
+// @Accept  json
+// @Produce  json
+// @Param input body model.Message true "messages"
+// @Success 200 {string} string "OK"
+// @Failure 400  {string} error "the maximum allowed message size has been exceeded"
+// @Router /v1/receiving [post]
 func (s *Server) ReceivingMessages(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -53,6 +62,13 @@ func (s *Server) ReceivingMessages(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(http.StatusText(200))
 }
 
+// @Summary      Get statistics
+// @Description  Get statistics on processed messages
+// @ID get-statistics
+// @Produce      json
+// @Success      200  {object}  model.Statistic
+// @Failure      500  {string} error err
+// @Router       /v1/getstatistics [get]
 func (s *Server) GetStatistics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
